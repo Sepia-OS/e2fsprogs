@@ -142,9 +142,11 @@ musl is deliberately **not** in the asset: the device's libc comes from
 asserts that too.
 
 A local build produces `dist/sepiaos-e2fsprogs-<version>-aarch64-musl.tar.xz`
-(644 KB for 1.47.4, from a 5.7 MiB stripped tree) and its `SHA256SUMS`, which
-is what `rootfs` is expected to unpack into the root filesystem — siblings
-consume each other's published releases, never each other's build trees.
+and its `SHA256SUMS`, which is what `rootfs` is expected to unpack into the
+root filesystem — siblings consume each other's published releases, never each
+other's build trees. For 1.47.4 that is 644 KB from a 5.7 MiB stripped tree on
+macOS, and 700 KB from 5.4 MiB on Linux, where releases are cut: the two hosts
+take their cross-toolchain from different vendors, so the binaries differ.
 
 ```sh
 sha256sum -c SHA256SUMS

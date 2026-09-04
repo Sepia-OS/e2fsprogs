@@ -8,7 +8,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **That is a layout and linkage proof, not a behavioural one.** Nothing has yet *run* any of these programs — that needs a board or an emulator, and until it happens "mke2fs works on the device" is a claim.
 
-What does not exist yet: any consumer in `../rootfs` (it still cross-builds its own `resize2fs` from its own e2fsprogs tree), and a single CI run — both workflows are written but have never executed, so the bootlin/Linux path is unproven here exactly as it was in `../make`.
+**The Linux/bootlin path is proven too**, which it was not in `../make`: the CI job was reproduced locally by running the workflow's own steps inside `debian:trixie-slim` on `linux/amd64` under Docker, and produced the same 22 programs and the same layout from bootlin 2025.08-1 (GCC 14.3.0) — 5.4 MiB staged, a 700 KB asset. The two hosts' assets differ in size because their toolchains do; that is expected, and it is why releases are cut on Linux.
+
+The first real CI run failed, at `toolchain-check`, on the missing `libc6-dev` recorded under CI below. Reproducing the job in the container is cheap and worth doing before pushing a workflow change:
+
+```sh
+docker run -d --platform linux/amd64 --name e2fs-ci debian:trixie-slim sleep infinity
+git ls-files | COPYFILE_DISABLE=1 tar --no-mac-metadata --no-xattrs -cf - -T - | docker cp - e2fs-ci:/src
+docker exec e2fs-ci sh -c 'apt-get update -qq && apt-get install -y -qq --no-install-recommends \
+  make git curl ca-certificates xz-utils gcc libc6-dev'
+docker exec e2fs-ci sh -c 'cd /src && make toolchain toolchain-check sources sysroot \
+  verify-downloads sysroot-check e2fsprogs stage stage-check dist'
+```
+
+`--platform linux/amd64` is not optional: bootlin publishes x86_64-hosted toolchains only, so an arm64 container hits the Makefile's "no prebuilt toolchain for this host" error and proves nothing. Nor is copying the tree in with `docker cp` rather than bind-mounting it — `../rootfs` records a bind-mounted build failing inside e2fsprogs with *"chmod: changing permissions of 'compile_et': Permission denied"*, an artifact of Docker Desktop's shared filesystem. `--no-mac-metadata --no-xattrs` keeps `docker cp` from choking on `com.apple.provenance`.
+
+What does not exist yet: any consumer in `../rootfs` (it still cross-builds its own `resize2fs` from its own e2fsprogs tree).
 
 ## Commands
 
