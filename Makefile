@@ -262,8 +262,16 @@ define assert_build_cc
 	command -v $(BUILD_CC) >/dev/null 2>&1 || { \
 	  echo "  FAIL     no host compiler ($(BUILD_CC)). e2fsprogs compiles and runs" >&2; \
 	  echo "           helper programs on the build machine, so one is required." >&2; \
-	  echo "           macOS: xcode-select --install. Debian: apt-get install gcc." >&2; \
+	  echo "           macOS: xcode-select --install. Debian: apt-get install gcc libc6-dev." >&2; \
 	  echo "           Or set BUILD_CC to the host compiler you have." >&2; \
+	  exit 1; }; \
+	printf '#include <stdio.h>\nint main(void){return 0;}\n' \
+	  | $(BUILD_CC) -x c -E - > /dev/null 2>&1 || { \
+	  echo "  FAIL     $(BUILD_CC) is installed but cannot find the C headers." >&2; \
+	  echo "           Debian ships them in libc6-dev, which gcc only *recommends*," >&2; \
+	  echo "           so apt-get --no-install-recommends leaves them out: cc then" >&2; \
+	  echo "           installs, runs, and fails on the first #include <stdio.h>." >&2; \
+	  echo "           apt-get install libc6-dev." >&2; \
 	  exit 1; }
 endef
 

@@ -203,12 +203,13 @@ jobs:
       # actions/checkout silently falls back to downloading a tarball.
       #
       # Keep this list identical to ci.yml's, or a release builds in a container
-      # CI never tested.
+      # CI never tested. libc6-dev is not redundant next to gcc: gcc only
+      # recommends it, so --no-install-recommends leaves the C headers out.
       - name: Install build tools
         run: |
           apt-get update -qq
           apt-get install -y -qq --no-install-recommends \
-            make git curl ca-certificates xz-utils gcc
+            make git curl ca-certificates xz-utils gcc libc6-dev
 
       # The release branch, not the dispatched ref: this is the whole point of
       # having branched.

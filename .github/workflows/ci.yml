@@ -55,12 +55,17 @@ jobs:
       # Before checkout on purpose: without git in the container,
       # actions/checkout silently falls back to downloading a tarball.
       #
-      # `gcc` is the one entry ../make's otherwise identical list does not have,
-      # and it is not decoration: e2fsprogs compiles and runs helper programs on
-      # the build machine (util/subst, the CRC32c table generator,
-      # util/parse-types.sh), so BUILD_CC has to be a real compiler for *this*
-      # container. It also supplies /usr/bin/cc, which is the Makefile's
-      # default BUILD_CC.
+      # `gcc libc6-dev` is what ../make's otherwise identical list does not
+      # have, and neither entry is decoration: e2fsprogs compiles and runs
+      # helper programs on the build machine (util/subst, the CRC32c table
+      # generator, util/parse-types.sh), so BUILD_CC has to be a real compiler
+      # for *this* container. gcc supplies /usr/bin/cc, the Makefile's default
+      # BUILD_CC.
+      #
+      # libc6-dev is listed separately because gcc only *recommends* it, and
+      # --no-install-recommends therefore leaves it out: `cc` installs, runs,
+      # links a static binary - and then cannot find <stdio.h>. That is how
+      # this workflow failed on its first run.
       #
       # xz-utils is not optional: bootlin ships its toolchain as .tar.xz and
       # `make dist` packs with xz -9.
@@ -68,7 +73,7 @@ jobs:
         run: |
           apt-get update -qq
           apt-get install -y -qq --no-install-recommends \
-            make git curl ca-certificates xz-utils gcc
+            make git curl ca-certificates xz-utils gcc libc6-dev
 
       - uses: actions/checkout@v5
 

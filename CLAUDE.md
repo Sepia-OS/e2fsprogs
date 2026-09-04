@@ -116,7 +116,8 @@ Verified across `../boot`, `../rootfs`, `../llvm` and `../make`, and followed he
 Both files are the `../make` pair with the differences this package forces; `../boot/docs/CI.md` is the full reasoning:
 
 - **`ci.yml` builds on every commit on every branch and every PR against `main`**, in `debian:trixie-slim`. This build is under a minute of compute, so there is no reason to narrow it.
-- **The package list is `../make`'s plus `gcc`**, for `BUILD_CC`. Keep the two workflows' lists identical to each other, or a release builds in a container CI never tested.
+- **The package list is `../make`'s plus `gcc` and `libc6-dev`**, for `BUILD_CC`. Keep the two workflows' lists identical to each other, or a release builds in a container CI never tested.
+- **`libc6-dev` is not implied by `gcc`.** Debian's `gcc` merely *recommends* it, and both workflows install with `--no-install-recommends`, so the first CI run got a `cc` that ran, linked a static binary and then died on `#include <stdio.h>`. `assert_build_cc` now preprocesses a one-line program through `BUILD_CC` and names the package, so the same mistake on a development machine fails in a second with an answer instead of somewhere inside e2fsprogs' build.
 - **Build tools go in *before* `actions/checkout`.** Without `git` in the container, checkout silently degrades to a tarball download.
 - **`verify-downloads` runs after `sysroot`, not before.** Unlike `../make`'s, it checks the musl tarball as well as the package sources, and musl is not downloaded until the sysroot is built.
 - **Workflows call only documented `make` targets**, so any CI failure reproduces locally verbatim.

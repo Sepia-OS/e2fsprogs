@@ -33,8 +33,8 @@ nothing is written outside `build/`.
 repositories, **a C compiler for the build machine as well**.
 
 ```sh
-brew install make xz                          # macOS (cc comes from the Xcode CLT)
-sudo apt install make curl xz-utils gcc       # Debian / Ubuntu
+brew install make xz                                 # macOS (cc comes from the Xcode CLT)
+sudo apt install make curl xz-utils gcc libc6-dev    # Debian / Ubuntu
 ```
 
 e2fsprogs compiles and *runs* helper programs during its build: `util/subst`
@@ -42,6 +42,11 @@ generates config files, `lib/ext2fs` generates its CRC32c table, and
 `configure` itself runs `util/parse-types.sh` through `BUILD_CC`. Those run on
 the machine doing the building, so a host compiler is not optional here. Set
 `BUILD_CC` if yours is not called `cc`.
+
+`libc6-dev` is listed next to `gcc` on purpose: Debian's `gcc` only
+*recommends* it, so an install with `--no-install-recommends` gives you a `cc`
+that runs and then cannot find `<stdio.h>`. `toolchain-check` says so in as
+many words rather than letting the build discover it.
 
 > **On macOS, run `gmake`, not `make`.** `/usr/bin/make` is GNU Make 3.81,
 > which compares file timestamps only to the whole second and will silently
